@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Cobrança — Faculdade</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      /* Identidade Visual — Azul Predominante do Logo */
+      --blue-dominant: #00224D;     
+      --blue-deep: #00132C;          
+      --blue-card: #002D62;          
+      --green-highlight: #00C853;    
+      --white-text: #FFFFFF;
+      --gray-text: #BACAD6;
+      --border-color: rgba(186, 202, 214, 0.12); 
+
+      /* Cores de status */
+      --status-pago: #00C853;
+      --status-pago-bg: rgba(0, 200, 83, 0.12);
+      --status-aguardando: #FFB300;
+      --status-aguardando-bg: rgba(255, 179, 0, 0.12);
+      --status-naopago: #FF5252;
+      --status-naopago-bg: rgba(255, 82, 82, 0.12);
+
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background-color: var(--blue-deep);
+      color: var(--white-text);
+      font-family: var(--font-sans);
+      padding: 2rem;
+      line-height: 1.5;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      background: var(--blue-card);
+      border-radius: var(--border-radius-lg);
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--gray-text);
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab:hover {
+      color: var(--white-text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-tab.on {
+      color: var(--green-highlight);
+      border-bottom-color: var(--green-highlight);
+      font-weight: 600;
+    }
+
+    .sec { display: none; }
+    .sec.on { display: block; }
+
+    .card {
+      background: var(--blue-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-text);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .card-title i { color: var(--green-highlight); font-size: 18px; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 1.5rem;
+    }
+
+    .kpi {
+      background: rgba(0, 19, 44, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      padding: 1.25rem;
+    }
+
+    .kpi-label { font-size: 12px; color: var(--gray-text); margin-bottom: 6px; }
+    .kpi-val { font-size: 26px; font-weight: 700; color: var(--white-text); }
+    .kpi-sub { font-size: 12px; color: var(--gray-text); opacity: 0.8; margin-top: 4px; }
+
+    .mypanel {
+      background: var(--blue-card);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--green-highlight);
+      border-radius: var(--border-radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .rank-item:last-child { border-bottom: none; }
+    .medal { font-size: 20px; width: 28px; text-align: center; }
+    
+    .avi {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white-text);
+      background: var(--blue-dominant);
+      border: 1px solid var(--border-color);
+    }
+
+    .ri { flex: 1; }
+    .rn { font-size: 14px; font-weight: 600; }
+    .rbar { height: 6px; border-radius: 3px; margin: 8px 0 4px 0; background: rgba(0, 19, 44, 0.5); overflow: hidden; }
+    .rfill { height: 100%; border-radius: 3px; background: var(--green-highlight); transition: width 0.4s ease; }
+    .rsub { font-size: 12px; color: var(--gray-text); }
+    .ramt { font-size: 15px; font-weight: 600; text-align: right; }
+    .rpct { font-size: 12px; color: var(--gray-text); text-align: right; }
+
+    .sel-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+    .sel-wrap label { font-size: 14px; color: var(--gray-text); }
+
+    select, input[type=text], textarea {
+      font-size: 14px;
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      background: rgba(0, 19, 44, 0.4);
+      color: var(--white-text);
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select:focus, input:focus, textarea:focus { border-color: var(--green-highlight); }
+
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    
+    .filt {
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      color: var(--gray-text);
+      transition: all 0.2s;
+    }
+
+    .filt:hover { background: rgba(255, 255, 255, 0.05); color: var(--white-text); }
+    .filt.on { background: var(--green-highlight); color: var(--blue-deep); border-color: var(--green-highlight); font-weight: 600; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; }
+    .b-pago { background: var(--status-pago-bg); color: var(--status-pago); }
+    .b-aguard { background: var(--status-aguardando-bg); color: var(--status-aguardando); }
+    .b-naopago { background: var(--status-naopago-bg); color: var(--status-naopago); }
+
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    th { font-size: 12px; font-weight: 600; color: var(--gray-text); text-align: left; padding: 12px 10px; border-bottom: 2px solid var(--border-color); text-transform: uppercase; letter-spacing: 0.03em; }
+    td { padding: 14px 10px; border-bottom: 1px solid var(--border-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--border-radius-md); font-size: 14px; cursor: pointer; font-weight: 600; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.03); color: var(--white-text); transition: all 0.2s; }
+    .btn:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--white-text); }
+    .btn-fill { background: var(--green-highlight); color: var(--blue-deep); border-color: var(--green-highlight); }
+    .btn-fill:hover { opacity: 0.9; background: var(--green-highlight); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    .pbar { height: 8px; border-radius: 4px; overflow: hidden; background: rgba(0, 19, 44, 0.5); margin: 6px 0; }
+    .pfill { height: 100%; border-radius: 4px; background: var(--green-highlight); transition: width 0.4s ease; }
+
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .fgroup { display: flex; flex-direction: column; gap: 6px; }
+    .flabel { font-size: 12px; color: var(--gray-text); }
+    textarea { width: 100%; font-family: var(--font-mono); resize: vertical; }
+
+    .parse-box { border-radius: var(--border-radius-md); padding: 14px; margin-top: 12px; font-size: 13px; display: none; border: 1px solid transparent; }
+    .parse-ok { background: rgba(0, 200, 83, 0.08); border-color: var(--status-pago); color: #81C784; }
+    .parse-err { background: rgba(255, 82, 82, 0.08); border-color: var(--status-naopago); color: #E57373; }
+
+    .pfield { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .pfield:last-child { border-bottom: none; }
+    .pk { font-size: 12px; color: var(--gray-text); }
+    .pv { font-size: 12px; font-weight: 600; }
+
+    .alert-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--border-radius-md); font-size: 13px; margin-bottom: 10px; background: var(--status-aguardando-bg); border: 1px solid var(--status-aguardando); color: #FFE082; }
+    .nota { padding: 14px; border-radius: var(--border-radius-md); font-size: 13px; margin-bottom: 1.5rem; background: rgba(0, 200, 83, 0.08); color: #81C784; border: 1px solid rgba(0, 200, 83, 0.3); display: flex; gap: 10px; align-items: flex-start; }
+
+    .step-list { list-style: none; }
+    .step-item { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border-color); }
+    .step-item:last-child { border-bottom: none; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--status-pago-bg); color: var(--green-highlight); font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step-content { flex: 1; }
+    .step-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .step-desc { font-size: 13px; color: var(--gray-text); line-height: 1.6; }
+    .step-tip { margin-top: 8px; padding: 8px 12px; background: rgba(0, 0, 0, 0.2); border-radius: var(--border-radius-md); font-size: 12px; color: var(--gray-text); border-left: 2px solid var(--green-highlight); }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rectangle(0, 0, 0, 0); border: 0; }
+  </style>
+</head>
+<body>
+
+<h2 class="sr-only">Sistema de controle de cobrança com dashboard, ranking, acordos, inserção e guia de uso</h2>
+
+<div class="header-bar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="width:12px;height:12px;border-radius:50%;background:var(--green-highlight)"></div>
+    <div>
+      <div style="font-size:12px;color:var(--gray-text)">Acompanhamento de Metas atualizado em: 17/05/2026</div>
+      <div style="font-size:18px;font-weight:700;">Controle de acordos e metas — Faculdade</div>
+    </div>
+  </div>
+  <div style="text-align:right">
+    <div style="font-size:12px;color:var(--gray-text)">Total Geral Recebido Equipe</div>
+    <div style="font-size:24px;font-weight:700; color: var(--green-highlight)">R$ 342.304,85</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-tab on" onclick="tab('dash',this)"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</button>
+  <button class="nav-tab" onclick="tab('acordos',this)"><i class="ti ti-list-check" aria-hidden="true"></i> Acordos</button>
+  <button class="nav-tab" onclick="tab('inserir',this)"><i class="ti ti-circle-plus" aria-hidden="true"></i> Novo acordo</button>
+  <button class="nav-tab" onclick="tab('alertas',this)"><i class="ti ti-bell-ringing" aria-hidden="true"></i> Alertas <span id="alerta-badge" style="background:var(--status-naopago-bg);color:var(--status-naopago);font-size:11px;padding:2px 8px;border-radius:10px;margin-left:4px"></span></button>
+  <button class="nav-tab" onclick="tab('guia',this)"><i class="ti ti-book-2" aria-hidden="true"></i> Guia de uso</button>
+</div>
+
+<div id="dash" class="sec on">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Total recebido</div><div class="kpi-val">R$ 342.304</div><div class="kpi-sub">todos · maio 2026</div></div>
+    <div class="kpi"><div class="kpi-label">Pagamentos validados</div><div class="kpi-val">921</div><div class="kpi-sub">atualizado hoje</div></div>
+    <div class="kpi"><div class="kpi-label">Ticket médio</div><div class="kpi-val">R$ 371</div><div class="kpi-sub">por aluno</div></div>
+    <div class="kpi"><div class="kpi-label">Dias úteis restantes</div><div class="kpi-val" style="color:var(--green-highlight)">10</div><div class="kpi-sub">fechamento do mês</div></div>
+  </div>
+
+  <div class="sel-wrap">
+    <label><i class="ti ti-user" style="font-size:14px" aria-hidden="true"></i> Meu painel:</label>
+    <select onchange="renderPainel(this.value)" id="sel-colab">
+      <option value="0">Giuliano</option><option value="1">Lucilene</option>
+      <option value="2">Lucas</option><option value="3">Diogo</option>
+      <option value="4">Lohaine</option><option value="5">Cassia</option>
+      <option value="6">Carla</option><option value="7">Paloma</option>
+    </select>
+  </div>
+
+  <div id="meu-painel" class="mypanel"></div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-trophy" aria-hidden="true"></i> Ranking recebimento — Maio 2026</div>
+    <div id="rank-list"></div>
+  </div>
+</div>
+
+<div id="acordos" class="sec">
+  <div class="filter-row">
+    <button class="filt on" onclick="filt(this,'todos')">Todos</button>
+    <button class="filt" onclick="filt(this,'Pago')"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i> Pago</button>
+    <button class="filt" onclick="filt(this,'Aguardando')"><i class="ti ti-clock" style="font-size:12px" aria-hidden="true"></i> Aguardando</button>
+    <button class="filt" onclick="filt(this,'Não pago')"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i> Não pago</button>
+    <button class="filt" onclick="filt(this,'À vista')">À vista</button>
+    <button class="filt" onclick="filt(this,'Parcelado')">Parcelado</button>
+  </div>
+  <div class="nota"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0" aria-hidden="true"></i><span>Clique no status de qualquer acordo para alterá-lo manualmente. Após a integração com o Mentor, isso será automático.</span></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="tbl-wrap">
+      <table>
+        <colgroup><col style="width:18%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:15%"><col style="width:14%"><col style="width:10%"><col style="width:7%"></colgroup>
+        <thead><tr>
+          <th>CPF</th><th>Vencimento</th><th>Total</th><th>Tipo</th><th>Status</th><th>Colaborador</th><th>Alerta</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="inserir" class="sec">
+  <div class="two">
+    <div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-message-2" aria-hidden="true"></i> Colar mensagem do WhatsApp</div>
+        <div style="font-size:13px;color:var(--gray-text);margin-bottom:10px">Cole no formato 📌 do grupo da Principia:</div>
+        <textarea id="msg-in" rows="8" placeholder="📌 CPF: 498.082.878-75&#10;📌 Mensalidades originais: Todas&#10;📌 Parcelamento: 6x&#10;📌 Valor da parcela: entrada de R$ 526,30 + 6x de R$ 204,67&#10;📌 Total negociado: R$ 1.754,34&#10;📌 Vencimento: 17/05"></textarea>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <button class="btn btn-fill" onclick="parseMsg()"><i class="ti ti-scan" aria-hidden="true"></i> Ler acordo</button>
+          <button class="btn" onclick="document.getElementById('msg-in').value='';document.getElementById('pres').style.display='none'">Limpar</button>
+        </div>
+        <div id="pres" class="parse-box"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-forms" aria-hidden="true"></i> Preencher formulário</div>
+        <div class="frow">
+          <div class="fgroup"><label class="flabel">CPF do aluno</label><input type="text" id="f-cpf" placeholder="000.000.000-00"></div>
+          <div class="fgroup"><label class="flabel">Vencimento</label><input type="text" id="f-venc" placeholder="17/05/2026"></div>
+        </div>
+        <div class="frow">
+          <div class="fgroup"><label class="flabel">Valor total</label><input type="text" id="f-val" placeholder="R$ 1.754,34"></div>
+          <div class="fgroup"><label class="flabel">Tipo</label><select id="f-tipo"><option>À vista</option><option>Parcelado</option></select></div>
+        </div>
+        <div class="frow">
+          <div class="fgroup"><label class="flabel">Parcelas</label><input type="text" id="f-parc" placeholder="6x de R$ 204,67"></div>
+          <div class="fgroup"><label class="flabel">Colaborador</label>
+            <select id="f-col">
+              <option>Giuliano</option><option>Lucilene</option><option>Lucas</option>
+              <option>Diogo</option><option>Lohaine</option><option>Cassia</option>
+              <option>Carla</option><option>Paloma</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-fill" onclick="addForm()" style="width:100%"><i class="ti ti-plus" aria-hidden="true"></i> Adicionar acordo</button>
+        <div id="form-ok" style="display:none;margin-top:10px;padding:10px 14px;border-radius:var(--border-radius-md);background:var(--status-pago-bg);border:1px solid var(--status-pago);color:#81C784;font-size:13px"><i class="ti ti-check" aria-hidden="true"></i> Acordo adicionado com sucesso!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="alertas" class="sec">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-clock-exclamation" aria-hidden="true"></i> Acordos em atraso — sem pagamento há +24h</div>
+    <div id="alert-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-send" aria-hidden="true"></i> Simular disparo via Sydle</div>
+    <div style="font-size:13px;color:var(--gray-text);margin-bottom:12px">Selecione o acordo para simular o envio da mensagem ao aluno:</div>
+    <select id="sel-alert" style="margin-bottom:14px; width: 100%;"></select>
+    <div style="margin-top:12px"><button class="btn btn-fill" onclick="simAlert()"><i class="ti ti-send" aria-hidden="true"></i> Simular envio</button></div>
+    <div id="alert-fb" style="display:none;margin-top:12px;padding:12px 16px;border-radius:var(--border-radius-md);background:var(--status-pago-bg);border:1px solid var(--status-pago);color:#81C784;font-size:13px"></div>
+  </div>
+</div>
+
+<div id="guia" class="sec">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-book-2" aria-hidden="true"></i> Guia Rápido de Uso</div>
+    <p style="font-size: 14px; color: var(--gray-text); margin-bottom: 1rem;">Utilize este painel interativo para demonstrar a eficiência do controle de cobranças para a diretoria da faculdade.</p>
+    <ul class="step-list">
+      <li class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Demonstrar o "Meu Painel"</div>
+          <div class="step-desc">Mostre como o sistema filtra dinamicamente a meta atualizada de R$ 100k e calcula automaticamente o progresso em tempo real com base nos seus dados de 15/05 a 17/05.</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script>
+// Giuliano com Meta de 100k e total acumulado de R$ 79.210,00 incluindo os novos R$ 7.147,81 recebidos!
+const colabData = [
+  { nome: "Giuliano", meta: 100000, recebido: 79210 },
+  { nome: "Lucilene", meta: 100000, recebido: 49120 },
+  { nome: "Lucas", meta: 100000, recebido: 46800 },
+  { nome: "Diogo", meta: 100000, recebido: 41254 },
+  { nome: "Lohaine", meta: 100000, recebido: 38900 },
+  { nome: "Cassia", meta: 100000, recebido: 35400 },
+  { nome: "Carla", meta: 100000, recebido: 29520 },
+  { nome: "Paloma", meta: 100000, recebido: 22100.85 }
+];
+
+// Tabela populada com os maiores recebimentos reais informados entre 15/05 e 17/05
+let acordos = [
+  { cpf: "512.984.310-55", venc: "17/05/2026", total: "R$ 749,22", tipo: "Parcelado", status: "Pago", colab: "Giuliano", alerta: "-" },
+  { cpf: "219.004.832-11", venc: "17/05/2026", total: "R$ 605,00", tipo: "À vista", status: "Pago", colab: "Giuliano", alerta: "-" },
+  { cpf: "302.114.850-91", venc: "16/05/2026", total: "R$ 558,29", tipo: "Parcelado", status: "Pago", colab: "Giuliano", alerta: "-" },
+  { cpf: "654.891.023-77", venc: "16/05/2026", total: "R$ 537,30", tipo: "Parcelado", status: "Pago", colab: "Giuliano", alerta: "-" },
+  { cpf: "741.025.963-00", venc: "15/05/2026", total: "R$ 383,04", tipo: "Parcelado", status: "Pago", colab: "Giuliano", alerta: "-" },
+  { cpf: "885.124.963-44", venc: "15/05/2026", total: "R$ 355,34", tipo: "À vista", status: "Pago", colab: "Giuliano", alerta: "-" },
+  { cpf: "102.843.921-04", venc: "16/05/2026", total: "R$ 3.450,00", tipo: "Parcelado", status: "Aguardando", colab: "Lucilene", alerta: "Atraso entrada" },
+  { cpf: "294.029.482-99", venc: "17/05/2026", total: "R$ 850,00", tipo: "À vista", status: "Não pago", colab: "Lucas", alerta: "Vencido" }
+];
+
+let currentFilter = 'todos';
+
+function tab(id, btn) {
+  document.querySelectorAll('.sec').forEach(e => e.classList.remove('on'));
+  document.querySelectorAll('.nav-tab').forEach(e => e.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+
+function renderPainel(idx) {
+  const c = colabData[idx];
+  const pct = ((c.recebido / c.meta) * 100).toFixed(1);
+  const faltam = c.meta - c.recebido;
+  const faltamText = faltam <= 0 ? "Meta batida! 🎉" : `R$ ${faltam.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+  
+  document.getElementById('meu-painel').innerHTML = `
+    <div style="display:flex;justify-content:between;align-items:center;flex-wrap:wrap;gap:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="avi">${c.nome.substring(0,2).toUpperCase()}</div>
+        <div>
+          <div style="font-size:16px;font-weight:600">${c.nome}</div>
+          <div style="font-size:12px;color:var(--gray-text)">Meta do mês: R$ ${c.meta.toLocaleString('pt-BR')}</div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;margin:0 20px">
+        <div style="display:flex;justify-content:between;font-size:12px;margin-bottom:4px">
+          <span>Progresso da Meta Individual</span>
+          <span style="font-weight:600;color:var(--green-highlight)">${pct}%</span>
+        </div>
+        <div class="pbar"><div class="pfill" style="width:${Math.min(pct,100)}%"></div></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--gray-text)">Recuperado / Falta</div>
+        <div style="font-size:14px;font-weight:600">R$ ${c.recebido.toLocaleString('pt-BR')} <span style="font-size:12px;color:var(--gray-text);font-weight:400">/ ${faltamText}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRanking() {
+  const sorted = [...colabData].sort((a,b) => b.recebido - a.recebido);
+  const list = document.getElementById('rank-list');
+  list.innerHTML = '';
+  
+  sorted.forEach((c, i) => {
+    let medal = '<span class="medal" style="color:var(--gray-text)">' + (i+1) + '</span>';
+    if(i===0) medal = '<span class="medal">🥇</span>';
+    if(i===1) medal = '<span class="medal">🥈</span>';
+    if(i===2) medal = '<span class="medal">🥉</span>';
+    
+    const pct = ((c.recebido / c.meta) * 100).toFixed(0);
+    const faltam = c.meta - c.recebido;
+    
+    const item = document.createElement('div');
+    item.className = 'rank-item';
+    item.innerHTML = `
+      ${medal}
+      <div class="avi">${c.nome.substring(0,2).toUpperCase()}</div>
+      <div class="ri">
+        <div class="rn">${c.nome}</div>
+        <div class="rbar"><div class="rfill" style="width:${Math.min(pct,100)}%"></div></div>
+        <div class="rsub">Meta: R$ ${c.meta.toLocaleString('pt-BR')}</div>
+      </div>
+      <div style="width:120px">
+        <div class="ramt">R$ ${c.recebido.toLocaleString('pt-BR',{maximumFractionDigits:0})}</div>
+        <div class="rpct">${pct}% da meta</div>
+      </div>
+      <div style="width:110px;text-align:right">
+        <div class="ramt" style="font-size:13px;font-weight:400;color:${faltam<=0?'var(--green-highlight)':'var(--white-text)'}">${faltam<=0?'Batida': 'R$ '+faltam.toLocaleString('pt-BR',{maximumFractionDigits:0})}</div>
+        <div class="rpct">${faltam<=0?'---':'restante'}</div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function cycleStatus(idx) {
+  const item = acordos[idx];
+  const old = item.status;
+  if(old === 'Aguardando') item.status = 'Pago';
+  else if(old === 'Pago') item.status = 'Não pago';
+  else item.status = 'Aguardando';
+  
+  if(item.status === 'Pago') item.alerta = '-';
+  else if(item.status === 'Não pago') item.alerta = 'Vencido';
+  else item.alerta = 'Aguardando';
+
+  const cObj = colabData.find(x => x.nome === item.colab);
+  if(cObj) {
+    let val = parseFloat(item.total.replace('R$','').replace('.','').replace(',','.').trim());
+    if(item.status === 'Pago' && old !== 'Pago') cObj.recebido += val;
+    if(item.status !== 'Pago' && old === 'Pago') cObj.recebido -= val;
+  }
+
+  renderTable();
+  renderRanking();
+  renderPainel(document.getElementById('sel-colab').value);
+  updateAlertBadge();
+  renderAlertas();
+}
+
+function filt(btn, f) {
+  document.querySelectorAll('.filt').forEach(e => e.classList.remove('on'));
+  btn.classList.add('on');
+  currentFilter = f;
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  
+  acordos.forEach((item, idx) => {
+    if(currentFilter !== 'todos') {
+      if(currentFilter === 'Pago' && item.status !== 'Pago') return;
+      if(currentFilter === 'Aguardando' && item.status !== 'Aguardando') return;
+      if(currentFilter === 'Não pago' && item.status !== 'Não pago') return;
+      if(currentFilter === 'À vista' && item.tipo !== 'À vista') return;
+      if(currentFilter === 'Parcelado' && item.tipo !== 'Parcelado') return;
+    }
+    
+    let bCls = 'b-aguard';
+    if(item.status === 'Pago') bCls = 'b-pago';
+    if(item.status === 'Não pago') bCls = 'b-naopago';
+    
+    let alHtml = item.alerta === '-' ? '<span style="color:var(--gray-text);opacity:.4">-</span>' : `<span style="color:var(--status-aguardando);font-weight:600"><i class="ti ti-alert-triangle" style="font-size:12px"></i> ${item.alerta}</span>`;
+    if(item.status === 'Não pago') alHtml = `<span style="color:var(--status-naopago);font-weight:600"><i class="ti ti-circle-x" style="font-size:12px"></i> Vencido</span>`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-family:var(--font-mono)">${item.cpf}</td>
+      <td>${item.venc}</td>
+      <td style="font-weight:600">${item.total}</td>
+      <td>${item.tipo}</td>
+      <td><button class="badge ${bCls}" onclick="cycleStatus(${idx})">${item.status}</button></td>
+      <td>${item.colab}</td>
+      <td>${alHtml}</td>
+      <td><button class="btn btn-sm" style="padding:4px 8px" onclick="window.activeCpf='${item.cpf}';tab('alertas',document.querySelectorAll('.nav-tab')[3]);document.getElementById('sel-alert').value='${item.cpf}'"><i class="ti ti-send"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateAlertBadge() {
+  const count = acordos.filter(x => x.status !== 'Pago' && x.alerta !== '-').length;
+  const b = document.getElementById('alerta-badge');
+  if(count > 0) { b.innerText = count; b.style.display = 'inline-block'; }
+  else b.style.display = 'none';
+}
+
+function renderAlertas() {
+  const list = document.getElementById('alert-list');
+  list.innerHTML = '';
+  const sel = document.getElementById('sel-alert');
+  sel.innerHTML = '';
+  
+  const atrasados = acordos.filter(x => x.status !== 'Pago');
+  
+  if(atrasados.length === 0) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--gray-text);padding:10px 0">Nenhum acordo pendente ou em atraso! Excelente trabalho.</div>';
+    sel.innerHTML = '<option>Nenhum aluno em atraso</option>';
+    return;
+  }
+  
+  atrasados.forEach(x => {
+    const div = document.createElement('div');
+    div.className = 'alert-item';
+    div.innerHTML = `<i class="ti ti-clock-exclamation" style="font-size:16px"></i> <span><strong>Aluno CPF ${x.cpf}</strong> está com status [${x.status}] sob responsabilidade de <strong>${x.colab}</strong>. Vencimento em ${x.venc}.</span>`;
+    list.appendChild(div);
+    
+    const opt = document.createElement('option');
+    opt.value = x.cpf;
+    opt.innerText = `CPF: ${x.cpf} (${x.colab}) - ${x.total}`;
+    sel.appendChild(opt);
+  });
+}
+
+function simAlert() {
+  const val = document.getElementById('sel-alert').value;
+  if(!val || val.startsWith('Nenhum')) return;
+  const fb = document.getElementById('alert-fb');
+  fb.innerText = `🚀 Sucesso: Comando enviado via API Sydle! Template de régua de acionamento de pix enviado para o aluno do CPF ${val}.`;
+  fb.style.display = 'block';
+  setTimeout(() => { fb.style.display = 'none'; }, 6000);
+}
+
+function parseMsg() {
+  const txt = document.getElementById('msg-in').value;
+  const el = document.getElementById('pres');
+  el.className = 'parse-box';
+  
+  if(!txt.includes('CPF')) {
+    el.className = 'parse-box parse-err';
+    el.innerHTML = '<i class="ti ti-circle-x"></i> Erro: Formato inválido. Certifique-se de copiar a mensagem padrão com os marcadores 📌.';
+    el.style.display = 'block';
+    return;
+  }
+  
+  try {
+    const cpf = txt.match(/CPF:\s*([\d\.\-]+)/)[1];
+    const total = txt.match(/Total negociado:\s*(R\$\s*[\d\.,]+)/)[1];
+    const venc = txt.match(/Vencimento:\s*([\d\/]+)/)[1];
+    const parcMatch = txt.match(/Parcelamento:\s*(.+)/);
+    const parcelaMatch = txt.match(/Valor da parcela:\s*(.+)/);
+    
+    const tipo = (parcMatch && parcMatch[1].includes('1x') || txt.includes('À vista') || txt.includes('A vista')) ? 'À vista' : 'Parcelado';
+    const parcela = parcelaMatch ? parcelaMatch[1] : '';
+    const colab = document.getElementById('f-col').value;
+    
+    window._novo = { cpf, venc, total, tipo, status: 'Aguardando', colab, alerta: 'Aguardando' };
+    
+    el.className = 'parse-box parse-ok';
+    el.innerHTML = `
+      <div style="font-weight:600;margin-bottom:6px"><i class="ti ti-circle-check"></i> Dados lidos com sucesso!</div>
+      <div class="pfield"><span class="pk">CPF</span><span class="pv">${cpf}</span></div>
+      <div class="pfield"><span class="venc">Vencimento</span><span class="pv">${venc}</span></div>
+      <div class="pfield"><span class="pk">Total</span><span class="pv">${total}</span></div>
+      <div class="pfield"><span class="pk">Tipo</span><span class="pv">${tipo}</span></div>
+      <div class="pfield"><span class="pk">Parcelas</span><span class="pv">${parcela||'—'}</span></div>
+      <div style="margin-top:8px"><button class="btn btn-fill btn-sm" onclick="confirmar()" style="width:100%"><i class="ti ti-check" aria-hidden="true"></i> Confirmar e adicionar</button></div>`;
+    el.style.display = 'block';
+  } catch(e) {
+    el.className = 'parse-box parse-err';
+    el.innerHTML = '<i class="ti ti-alert-triangle"></i> Erro ao processar o texto. Verifique se os campos principais estão presentes.';
+    el.style.display = 'block';
+  }
+}
+
+function confirmar() {
+  if(window._novo) { acordos.unshift(window._novo); window._novo = null; }
+  document.getElementById('msg-in').value = '';
+  document.getElementById('pres').style.display = 'none';
+  updateAlertBadge();
+  renderTable();
+  renderAlertas();
+  tab('acordos', document.querySelectorAll('.nav-tab')[1]);
+}
+
+function addForm() {
+  const cpf = document.getElementById('f-cpf').value.trim();
+  const venc = document.getElementById('f-venc').value.trim();
+  const val = document.getElementById('f-val').value.trim();
+  if(!cpf || !venc || !val) { alert('Preencha CPF, vencimento e valor.'); return; }
+  
+  acordos.unshift({
+    cpf, venc,
+    total: val.startsWith('R$') ? val : 'R$ ' + val,
+    tipo: document.getElementById('f-tipo').value,
+    status: 'Aguardando',
+    colab: document.getElementById('f-col').value,
+    alerta: 'Aguardando'
+  });
+  
+  document.getElementById('f-cpf').value = '';
+  document.getElementById('f-venc').value = '';
+  document.getElementById('f-val').value = '';
+  document.getElementById('f-parc').value = '';
+  
+  const ok = document.getElementById('form-ok');
+  ok.style.display = 'block';
+  setTimeout(() => { ok.style.display = 'none'; }, 3000);
+  
+  updateAlertBadge();
+  renderTable();
+  renderAlertas();
+}
+
+window.onload = function() {
+  renderPainel(0); // Inicia direto com o seu painel (Giuliano) aberto
+  renderRanking();
+  renderTable();
+  updateAlertBadge();
+  renderAlertas();
+};
+</script>
+</body>
+</html>
